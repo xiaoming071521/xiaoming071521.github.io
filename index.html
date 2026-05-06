@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>老年CHD患者衰弱风险在线计算器 | 临床预测模型</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .model-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 10px;
+            font-family: monospace;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group label .required {
+            color: #e74c3c;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42,82,152,0.1);
+        }
+
+        .form-group .hint {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn-calculate {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-calculate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(30,60,114,0.4);
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result-card.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .risk-score {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .risk-percentage {
+            font-size: 48px;
+            font-weight: bold;
+            color: #1e3c72;
+        }
+
+        .risk-label {
+            font-size: 18px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .risk-bar {
+            height: 12px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .risk-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #ffc107, #dc3545);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .risk-level {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .risk-low { background: #d4edda; color: #155724; }
+        .risk-moderate { background: #fff3cd; color: #856404; }
+        .risk-high { background: #f8d7da; color: #721c24; }
+
+        .equation-detail {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 15px;
+            border-left: 4px solid #2a5298;
+        }
+
+        .equation-detail code {
+            display: block;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .row { grid-template-columns: 1fr; gap: 0; }
+            .content { padding: 20px; }
+            .header h1 { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>🏥 老年CHD患者衰弱风险在线计算器</h1>
+                <p>基于Logistic回归模型的冠心病患者衰弱风险预测工具</p>
+                <div class="model-badge">预测模型版本 v1.0 | AUC = 0.82 (95%CI: 0.78-0.86)</div>
+            </div>
+            
+            <div class="content">
+                <form id="riskForm">
+                    <div class="row">
+                        <div class="form-group">
+                            <label>📅 年龄 <span class="required">*</span></label>
+                            <select id="ageGroup" required>
+                                <option value="60-69">60-69岁（参考组）</option>
+                                <option value="70-79">70-79岁</option>
+                                <option value="80+">≥80岁</option>
+                            </select>
+                            <div class="hint">年龄是衰弱的重要预测因子</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>📊 ACCI（年龄校正Charlson合并症指数）</label>
+                            <input type="number" id="acci" step="0.5" min="0" max="20" value="2">
+                            <div class="hint">范围0-20，分数越高合并症越多</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="form-group">
+                            <label>💊 日常用药数量</label>
+                            <input type="number" id="medCount" min="0" max="30" value="3">
+                            <div class="hint">日常服用的药物品种总数</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>🩸 CRP（C反应蛋白，mg/L）</label>
+                            <input type="number" id="crp" step="0.1" min="0" max="200" value="5">
+                            <div class="hint">正常值&lt;5mg/L，升高提示炎症</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>💪 一般自我效能感量表得分（GSES）</label>
+                        <input type="number" id="selfEfficacy" min="10" max="40" value="30">
+                        <div class="hint">范围10-40分，分数越高自我效能感越强</div>
+                    </div>
+                    
+                    <button type="button" class="btn-calculate" onclick="calculateRisk()">🔍 计算衰弱风险</button>
+                </form>
+                
+                <div id="result" class="result-card">
+                    <div class="risk-score">
+                        <div class="risk-percentage" id="riskPercentage">0%</div>
+                        <div class="risk-label">衰弱预测概率</div>
+                        <div class="risk-bar">
+                            <div class="risk-bar-fill" id="riskBarFill"></div>
+                        </div>
+                        <div>
+                            <span class="risk-level" id="riskLevel">-</span>
+                        </div>
+                    </div>
+                    
+                    <div id="riskInterpretation" style="margin-bottom: 15px; line-height: 1.6;"></div>
+                    
+                    <div id="recommendations" style="background: white; padding: 15px; border-radius: 10px;"></div>
+                    
+                    <div class="equation-detail">
+                        <strong>📐 计算详情：</strong><br>
+                        <code id="equationDetail">-</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>⚠️ 本工具仅供临床参考，不作为诊断依据 | 基于Logistic回归模型 | 建议结合临床综合判断</p>
+        </div>
+    </div>
+    
+    <script>
+        // 模型系数
+        const COEFF = {
+            intercept: -1.883,
+            age70_79: 0.754,
+            age80_plus: 1.436,
+            acci: 0.258,
+            medCount: 0.330,
+            crp: 0.171,
+            selfEfficacy: -0.050
+        };
+        
+        // 风险等级阈值
+        const RISK_THRESHOLDS = {
+            low: 0.30,      // <30% 低风险
+            moderate: 0.50  // 30%-50% 中风险，≥50% 高风险
+        };
+        
+        function calculateRisk() {
+            // 获取输入值
+            const ageGroup = document.getElementById('ageGroup').value;
+            const acci = parseFloat(document.getElementById('acci').value) || 0;
+            const medCount = parseFloat(document.getElementById('medCount').value) || 0;
+            const crp = parseFloat(document.getElementById('crp').value) || 0;
+            const selfEfficacy = parseFloat(document.getElementById('selfEfficacy').value) || 10;
+            
+            // 验证输入范围
+            if (selfEfficacy < 10 || selfEfficacy > 40) {
+                alert('自我效能感得分应在10-40分之间');
+                return;
+            }
+            if (crp < 0 || crp > 200) {
+                alert('CRP值应在0-200 mg/L之间');
+                return;
+            }
+            if (medCount < 0 || medCount > 30) {
+                alert('用药数量应在0-30种之间');
+                return;
+            }
+            
+            // 计算年龄哑变量
+            let ageCoeff = 0;
+            let ageTerm = '';
+            if (ageGroup === '70-79') {
+                ageCoeff = COEFF.age70_79;
+                ageTerm = '0.754 × 1 (70-79岁)';
+            } else if (ageGroup === '80+') {
+                ageCoeff = COEFF.age80_plus;
+                ageTerm = '1.436 × 1 (≥80岁)';
+            } else {
+                ageTerm = '0 (60-69岁参考组)';
+            }
+            
+            // 计算Logit(P)
+            const logit = COEFF.intercept + 
+                         ageCoeff + 
+                         (COEFF.acci * acci) + 
+                         (COEFF.medCount * medCount) + 
+                         (COEFF.crp * crp) + 
+                         (COEFF.selfEfficacy * selfEfficacy);
+            
+            // 计算风险概率 P = 1/(1+e^(-logit))
+            const riskProb = 1 / (1 + Math.exp(-logit));
+            const riskPercent = (riskProb * 100).toFixed(1);
+            
+            // 确定风险等级
+            let riskLevel, riskLevelText, riskColor;
+            if (riskProb < RISK_THRESHOLDS.low) {
+                riskLevel = 'low';
+                riskLevelText = '低风险';
+                riskColor = '#28a745';
+            } else if (riskProb < RISK_THRESHOLDS.moderate) {
+                riskLevel = 'moderate';
+                riskLevelText = '中风险';
+                riskColor = '#ffc107';
+            } else {
+                riskLevel = 'high';
+                riskLevelText = '高风险';
+                riskColor = '#dc3545';
+            }
+            
+            // 更新UI
+            document.getElementById('riskPercentage').innerHTML = `${riskPercent}%`;
+            document.getElementById('riskBarFill').style.width = `${Math.min(riskProb * 100, 100)}%`;
+            document.getElementById('riskBarFill').style.background = `linear-gradient(90deg, #28a745, #ffc107, #dc3545)`;
+            
+            const riskLevelSpan = document.getElementById('riskLevel');
+            riskLevelSpan.innerHTML = riskLevelText;
+            riskLevelSpan.className = `risk-level risk-${riskLevel}`;
+            
+            // 显示计算详情
+            const equationDetail = `Logit(P) = ${COEFF.intercept.toFixed(3)} + ${ageTerm} + ${COEFF.acci.toFixed(3)}×${acci} + ${COEFF.medCount.toFixed(3)}×${medCount} + ${COEFF.crp.toFixed(3)}×${crp} + ${COEFF.selfEfficacy.toFixed(3)}×${selfEfficacy} = ${logit.toFixed(4)}
+            
+P(衰弱) = 1 / (1 + e^(-${logit.toFixed(4)})) = ${riskPercent}%`;
+            document.getElementById('equationDetail').innerHTML = equationDetail;
+            
+            // 风险解读
+            let interpretation = '';
+            let recommendations = '';
+            
+            if (riskLevel === 'low') {
+                interpretation = '✨ 根据模型预测，该患者发生衰弱的风险较低。建议继续保持良好的生活习惯和疾病管理。';
+                recommendations = `
+                    <strong>📋 管理建议：</strong><br>
+                    • 坚持规律的体育锻炼（如散步、太极拳）<br>
+                    • 保持均衡营养，确保充足蛋白质摄入<br>
+                    • 定期随访，监测CHD病情变化<br>
+                    • 维持积极心态和社交活动<br>
+                    • 建议每6-12个月复查一次
+                `;
+            } else if (riskLevel === 'moderate') {
+                interpretation = '⚠️ 根据模型预测，该患者处于衰弱中度风险状态。建议进行综合评估并采取预防性干预措施。';
+                recommendations = `
+                    <strong>📋 干预建议：</strong><br>
+                    • 进行全面的老年综合评估（CGA）<br>
+                    • 制定个体化的康复训练计划<br>
+                    • 营养咨询，优化蛋白质和维生素D摄入<br>
+                    • 药物重整，减少不必要的多重用药<br>
+                    • 心理支持，提升自我效能感<br>
+                    • 每3-6个月重新评估衰弱状态
+                `;
+            } else {
+                interpretation = '🚨 根据模型预测，该患者属于衰弱高风险人群。不良结局风险显著增加，需要立即采取综合干预。';
+                recommendations = `
+                    <strong>📋 综合管理建议：</strong><br>
+                    • 立即转诊至老年病专科或心脏康复中心<br>
+                    • 进行多学科团队（MDT）综合管理<br>
+                    • 制定个性化护理计划，加强家庭照护<br>
+                    • 进行跌倒风险评估和预防干预<br>
+                    • 营养支持治疗，必要时肠内营养<br>
+                    • 心理干预和认知功能训练<br>
+                    • 每月随访，密切监测病情变化
+                `;
+            }
+            
+            // 添加影响因素分析
+            const topFactors = [];
+            if (ageGroup !== '60-69') topFactors.push('年龄因素');
+            if (acci >= 4) topFactors.push('较高合并症负担');
+            if (medCount >= 8) topFactors.push('多重用药');
+            if (crp >= 10) topFactors.push('炎症水平升高');
+            if (selfEfficacy < 20) topFactors.push('自我效能感偏低');
+            
+            if (topFactors.length > 0) {
+                interpretation += `<br><br>🔍 <strong>主要风险因素：</strong> ${topFactors.join('、')}`;
+            }
+            
+            document.getElementById('riskInterpretation').innerHTML = interpretation;
+            document.getElementById('recommendations').innerHTML = recommendations;
+            
+            // 显示结果卡片
+            document.getElementById('result').classList.add('show');
+            
+            // 滚动到结果
+            document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // 添加输入验证和实时计算提示
+        document.addEventListener('DOMContentLoaded', function() {
+            // 为输入框添加输入验证
+            const inputs = ['acci', 'medCount', 'crp', 'selfEfficacy'];
+            inputs.forEach(id => {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.addEventListener('input', function() {
+                        if (this.value === '') return;
+                        let val = parseFloat(this.value);
+                        if (id === 'acci' && (val < 0 || val > 20)) {
+                            this.style.borderColor = '#dc3545';
+                        } else if (id === 'medCount' && (val < 0 || val > 30)) {
+                            this.style.borderColor = '#dc3545';
+                        } else if (id === 'crp' && (val < 0 || val > 200)) {
+                            this.style.borderColor = '#dc3545';
+                        } else if (id === 'selfEfficacy' && (val < 10 || val > 40)) {
+                            this.style.borderColor = '#dc3545';
+                        } else {
+                            this.style.borderColor = '#e9ecef';
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
