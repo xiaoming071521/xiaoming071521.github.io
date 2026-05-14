@@ -224,58 +224,55 @@
     <div class="container">
         <div class="card">
             <div class="header">
-                <h1>🏥 老年CHD患者衰弱风险在线计算器</h1>
-                <p>基于Logistic回归模型的冠心病患者衰弱风险预测工具</p>
-                <div class="model-badge">预测模型版本 v1.0 | AUC = 0.82 (95%CI: 0.78-0.86)</div>
+                <h1>🏥 Frailty Risk Assessment Tool for Elderly Patients with CHD</h1>
+                <p>Logistic Regression-Based Frailty Risk Assessment Tool for Elderly Patients with Coronary Heart Disease</p>
+                <div class="model-badge">Prediction Model Version v1.0 | AUC = 0.82 (95%CI: 0.78-0.86)</div>
             </div>
             
             <div class="content">
                 <form id="riskForm">
                     <div class="row">
                         <div class="form-group">
-                            <label>📅 年龄 <span class="required">*</span></label>
+                            <label>📅 AGE <span class="required">*</span></label>
                             <select id="ageGroup" required>
-                                <option value="60-69">60-69岁（参考组）</option>
-                                <option value="70-79">70-79岁</option>
-                                <option value="80+">≥80岁</option>
+                                <option value="60-69">60-69 years（Reference）</option>
+                                <option value="70-79">70-79 years</option>
+                                <option value="80+">≥80 years</option>
                             </select>
-                            <div class="hint">年龄是衰弱的重要预测因子</div>
                         </div>
                         
                         <div class="form-group">
-                            <label>📊 ACCI（年龄校正Charlson合并症指数）</label>
+                            <label>📊 Age-adjusted Charlson Comorbidity Index (ACCI)</label>
                             <input type="number" id="acci" step="0.5" min="0" max="20" value="2">
-                            <div class="hint">范围0-20，分数越高合并症越多</div>
                         </div>
                     </div>
                     
                     <div class="row">
                         <div class="form-group">
-                            <label>💊 日常用药数量</label>
+                            <label>💊 Quantity of medications</label>
                             <input type="number" id="medCount" min="0" max="30" value="3">
-                            <div class="hint">日常服用的药物品种总数</div>
                         </div>
                         
                         <div class="form-group">
-                            <label>🩸 CRP（C反应蛋白，mg/L）</label>
+                            <label>🩸 CRP（mg/L）</label>
                             <input type="number" id="crp" step="0.1" min="0" max="200" value="5">
-                            <div class="hint">正常值&lt;5mg/L，升高提示炎症</div>
+                            <!-- <div class="hint">正常值&lt;5mg/L，升高提示炎症</div> -->
                         </div>
                     </div>
                     
                     <div class="form-group">
-                        <label>💪 一般自我效能感量表得分（GSES）</label>
+                        <label>💪 Self-Efficacy</label>
                         <input type="number" id="selfEfficacy" min="10" max="40" value="30">
-                        <div class="hint">范围10-40分，分数越高自我效能感越强</div>
+                        <!-- <div class="hint">范围10-40分，分数越高自我效能感越强</div> -->
                     </div>
                     
-                    <button type="button" class="btn-calculate" onclick="calculateRisk()">🔍 计算衰弱风险</button>
+                    <button type="button" class="btn-calculate" onclick="calculateRisk()">🔍 Calculate Risk</button>
                 </form>
                 
                 <div id="result" class="result-card">
                     <div class="risk-score">
                         <div class="risk-percentage" id="riskPercentage">0%</div>
-                        <div class="risk-label">衰弱预测概率</div>
+                        <div class="risk-label">Predicted Frailty Risk</div>
                         <div class="risk-bar">
                             <div class="risk-bar-fill" id="riskBarFill"></div>
                         </div>
@@ -289,7 +286,7 @@
                     <div id="recommendations" style="background: white; padding: 15px; border-radius: 10px;"></div>
                     
                     <div class="equation-detail">
-                        <strong>📐 计算详情：</strong><br>
+                        <strong>📐 Details of calculation：</strong><br>
                         <code id="equationDetail">-</code>
                     </div>
                 </div>
@@ -297,7 +294,8 @@
         </div>
         
         <div class="footer">
-            <p>⚠️ 本工具仅供临床参考，不作为诊断依据 | 基于Logistic回归模型 | 建议结合临床综合判断</p>
+            <!-- <p>⚠️ 本工具仅供临床参考，不作为诊断依据 | 基于Logistic回归模型 | 建议结合临床综合判断</p> -->
+            <p>⚠️ This tool is for clincal reference only and should not be used fro diagnosis</p>
         </div>
     </div>
     
@@ -370,15 +368,18 @@
             let riskLevel, riskLevelText, riskColor;
             if (riskProb < RISK_THRESHOLDS.low) {
                 riskLevel = 'low';
-                riskLevelText = '低风险';
+                // riskLevelText = '低风险';
+                riskLevelText = 'Low Risk';
                 riskColor = '#28a745';
             } else if (riskProb < RISK_THRESHOLDS.moderate) {
                 riskLevel = 'moderate';
-                riskLevelText = '中风险';
+                // riskLevelText = '中风险';
+                riskLevelText = 'Moderate Risk';
                 riskColor = '#ffc107';
             } else {
                 riskLevel = 'high';
-                riskLevelText = '高风险';
+                // riskLevelText = '高风险';
+                riskLevelText = 'High Risk';
                 riskColor = '#dc3545';
             }
             
@@ -394,7 +395,7 @@
             // 显示计算详情
             const equationDetail = `Logit(P) = ${COEFF.intercept.toFixed(3)} + ${ageTerm} + ${COEFF.acci.toFixed(3)}×${acci} + ${COEFF.medCount.toFixed(3)}×${medCount} + ${COEFF.crp.toFixed(3)}×${crp} + ${COEFF.selfEfficacy.toFixed(3)}×${selfEfficacy} = ${logit.toFixed(4)}
             
-P(衰弱) = 1 / (1 + e^(-${logit.toFixed(4)})) = ${riskPercent}%`;
+P(Debility) = 1 / (1 + e^(-${logit.toFixed(4)})) = ${riskPercent}%`;
             document.getElementById('equationDetail').innerHTML = equationDetail;
             
             // 风险解读
@@ -402,50 +403,50 @@ P(衰弱) = 1 / (1 + e^(-${logit.toFixed(4)})) = ${riskPercent}%`;
             let recommendations = '';
             
             if (riskLevel === 'low') {
-                interpretation = '✨ 根据模型预测，该患者发生衰弱的风险较低。建议继续保持良好的生活习惯和疾病管理。';
+                interpretation = '✨ Based on the prediction model, the patient is currently at low risk of frailty. Continued maintenance of healthy lifestyle behaviors and appropriate disease management is recommended.';
                 recommendations = `
-                    <strong>📋 管理建议：</strong><br>
-                    • 坚持规律的体育锻炼（如散步、太极拳）<br>
-                    • 保持均衡营养，确保充足蛋白质摄入<br>
-                    • 定期随访，监测CHD病情变化<br>
-                    • 维持积极心态和社交活动<br>
-                    • 建议每6-12个月复查一次
+                    <strong>📋 Management Recommendations：</strong><br>
+                    • Maintain regular physical activity (eg, walking or Tai Chi)<br>
+                    • Ensure balanced nutrition with adequate protein intake<br>
+                    • Attend routine follow-up visits and monitor CHD progression<br>
+                    • Maintain positive psychological well-being and social engagement<br>
+                    • Reassessment is recommended every 6–12 months
                 `;
             } else if (riskLevel === 'moderate') {
-                interpretation = '⚠️ 根据模型预测，该患者处于衰弱中度风险状态。建议进行综合评估并采取预防性干预措施。';
+                interpretation = '⚠️ Based on the prediction model, the patient is currently at moderate risk of frailty. Comprehensive assessment and early preventive interventions are recommended to reduce the risk of frailty progression.';
                 recommendations = `
-                    <strong>📋 干预建议：</strong><br>
-                    • 进行全面的老年综合评估（CGA）<br>
-                    • 制定个体化的康复训练计划<br>
-                    • 营养咨询，优化蛋白质和维生素D摄入<br>
-                    • 药物重整，减少不必要的多重用药<br>
-                    • 心理支持，提升自我效能感<br>
-                    • 每3-6个月重新评估衰弱状态
+                    <strong>📋 Management Recommendations：</strong><br>
+                    • Conduct a comprehensive geriatric assessment (CGA)<br>
+                    • Develop an individualized rehabilitation program<br>
+                    • Provide nutritional counseling to optimize protein and vitamin D intake<br>
+                    • Perform medication review to minimize unnecessary medication burden<br>
+                    • Provide psychological support to improve self-efficacy<br>
+                    • Reassessment of frailty status is recommended every 3–6 months
                 `;
             } else {
-                interpretation = '🚨 根据模型预测，该患者属于衰弱高风险人群。不良结局风险显著增加，需要立即采取综合干预。';
+                interpretation = '🚨 Based on the prediction model, the patient is currently at high risk of frailty and may have an increased risk of adverse clinical outcomes. Comprehensive multidisciplinary intervention is strongly recommended.';
                 recommendations = `
-                    <strong>📋 综合管理建议：</strong><br>
-                    • 立即转诊至老年病专科或心脏康复中心<br>
-                    • 进行多学科团队（MDT）综合管理<br>
-                    • 制定个性化护理计划，加强家庭照护<br>
-                    • 进行跌倒风险评估和预防干预<br>
-                    • 营养支持治疗，必要时肠内营养<br>
-                    • 心理干预和认知功能训练<br>
-                    • 每月随访，密切监测病情变化
+                    <strong>📋 Comprehensive Management Recommendations：</strong><br>
+                    • Refer to a geriatric specialist or cardiac rehabilitation center when appropriate<br>
+                    • Initiate multidisciplinary team (MDT)-based managemen<br>
+                    • Develop an individualized care plan with enhanced family support<br>
+                    • Perform fall risk assessment and preventive interventions<br>
+                    • Provide nutritional support therapy, including enteral nutrition if necessary<br>
+                    • Consider psychological intervention and cognitive function training<br>
+                    • Monthly follow-up and close monitoring are recommended
                 `;
             }
             
             // 添加影响因素分析
             const topFactors = [];
-            if (ageGroup !== '60-69') topFactors.push('年龄因素');
-            if (acci >= 4) topFactors.push('较高合并症负担');
-            if (medCount >= 8) topFactors.push('多重用药');
-            if (crp >= 10) topFactors.push('炎症水平升高');
-            if (selfEfficacy < 20) topFactors.push('自我效能感偏低');
+            if (ageGroup !== '60-69') topFactors.push('Advanced Age');
+            if (acci >= 4) topFactors.push(' Higher Comorbidity Burden');
+            if (medCount >= 8) topFactors.push('Increased Medication Burden');
+            if (crp >= 10) topFactors.push('Elevated CRP Level');
+            if (selfEfficacy < 20) topFactors.push('Lower Self-Efficacy');
             
             if (topFactors.length > 0) {
-                interpretation += `<br><br>🔍 <strong>主要风险因素：</strong> ${topFactors.join('、')}`;
+                interpretation += `<br><br>🔍 <strong> Key Factors Associated with Increased Frailty Risk:</strong> ${topFactors.join('、')}`; //主要风险因素
             }
             
             document.getElementById('riskInterpretation').innerHTML = interpretation;
