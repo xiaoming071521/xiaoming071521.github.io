@@ -262,7 +262,7 @@
                     
                     <div class="form-group">
                         <label>💪 Self-Efficacy</label>
-                        <input type="number" id="selfEfficacy" min="10" max="40" value="30">
+                        <input type="number" id="selfEfficacy" min="0" max="64" value="30">  
                         <!-- <div class="hint">范围10-40分，分数越高自我效能感越强</div> -->
                     </div>
                     
@@ -313,8 +313,8 @@
         
         // 风险等级阈值
         const RISK_THRESHOLDS = {
-            low: 0.30,      // <30% 低风险
-            moderate: 0.50  // 30%-50% 中风险，≥50% 高风险
+            low: 0.20,      // <20% 低风险
+            moderate: 0.50  // 20%-50% 中风险，≥50% 高风险
         };
         
         function calculateRisk() {
@@ -326,8 +326,8 @@
             const selfEfficacy = parseFloat(document.getElementById('selfEfficacy').value) || 10;
             
             // 验证输入范围
-            if (selfEfficacy < 10 || selfEfficacy > 40) {
-                alert('自我效能感得分应在10-40分之间');
+            if (selfEfficacy < 0 || selfEfficacy > 64) {
+                alert('自我效能感得分应在0-64分之间');
                 return;
             }
             if (crp < 0 || crp > 200) {
@@ -344,12 +344,12 @@
             let ageTerm = '';
             if (ageGroup === '70-79') {
                 ageCoeff = COEFF.age70_79;
-                ageTerm = '0.754 × 1 (70-79岁)';
+                ageTerm = '0.754 × 1';  // (70-79岁)
             } else if (ageGroup === '80+') {
                 ageCoeff = COEFF.age80_plus;
-                ageTerm = '1.436 × 1 (≥80岁)';
+                ageTerm = '1.436 × 1'; //(≥80岁)
             } else {
-                ageTerm = '0 (60-69岁参考组)';
+                ageTerm = '0'; //(60-69岁参考组)
             }
             
             // 计算Logit(P)
@@ -475,7 +475,7 @@ P(Debility) = 1 / (1 + e^(-${logit.toFixed(4)})) = ${riskPercent}%`;
                             this.style.borderColor = '#dc3545';
                         } else if (id === 'crp' && (val < 0 || val > 200)) {
                             this.style.borderColor = '#dc3545';
-                        } else if (id === 'selfEfficacy' && (val < 10 || val > 40)) {
+                        } else if (id === 'selfEfficacy' && (val < 0 || val > 64)) {
                             this.style.borderColor = '#dc3545';
                         } else {
                             this.style.borderColor = '#e9ecef';
